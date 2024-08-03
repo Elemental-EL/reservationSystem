@@ -1,3 +1,5 @@
+import sys
+
 import user
 import reservation
 
@@ -32,7 +34,7 @@ def main():
             if username:
                 main_menu(username)
         elif choice0 == '3':
-            break
+            sys.exit()
         else:
             print("Invalid input, please try again.")
 
