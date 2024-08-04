@@ -139,13 +139,75 @@ def available_reservations(username):
             time_menu(selected_date.isoformat(), username)
 
 
-def my_reservations(username):
+def view_reservations(username):
+    """Lets the user choose which reservation they want to view."""
+    while True:
+        options = ["History of reservations", "Current reservations", "Back"]
+        choice = show_menu(options)
+        if choice == 0:
+            show_reservations(username, past=True)
+        elif choice == 1:
+            show_reservations(username, past=False)
+        elif choice == 2:
+            main.main_menu(username)
+
+
+def show_reservations(username, past):
+    """Views the reservations made by the user."""
     reservations = load_reservations()
-    user_reservations = [res for res in reservations.keys() if reservations[res]['username'] == username]
+    today = datetime.datetime.now()
+    user_reservations = []
+
+    for key, slots in reservations.items():
+        for reservation in slots:
+            if reservation['username'] == username:
+                reservation_time = datetime.datetime.strptime(key, "%Y-%m-%d %H:%M")
+                if (past and reservation_time < today) or (not past and reservation_time >= today):
+                    user_reservations.append((reservation_time, reservation['slot']))
 
     if not user_reservations:
-        print("You have no reservations.")
+        print("No reservations found.")
+        main.main_menu(username)
+
+    user_reservations.sort()
+    for idx, (res_time, slot) in enumerate(user_reservations, 1):
+        print(f"{idx}. {res_time.strftime('%Y-%m-%d %H:%M')} - Slot {slot}")
+
+    if past:
+        input("Press Enter to go back.")
     else:
-        print("My Reservations:")
-        for res in user_reservations:
-            print(f"- {res}: {reservations[res]['details']}")
+        options = [f"Cancel reservation {idx}" for idx in range(1, len(user_reservations) + 1)]
+        options.append("Back")
+        choice = show_menu(options)
+        if choice == len(options) - 1:
+            main.main_menu(username)
+        confirm_cancellation(username, user_reservations[choice])
+
+
+def confirm_cancellation(username, reservation):
+    """Double checks for the users decision and finalizes the cancellation if the input is yes."""
+    confirmation = input(f"Are you sure you want to cancel this reservation? (yes/no): ")
+    if confirmation.lower() == 'yes':
+        cancel_reservation(username, reservation)
+    elif confirmation.lower() == 'no':
+        print("Cancellation aborted.")
+    else:
+        print("Invalid input, please try again.")
+        confirm_cancellation(username, reservation)
+
+
+def cancel_reservation(username, reservation):
+    """Cancels the reservation selected by the user."""
+    reservations = load_reservations()
+    key = reservation[0].strftime("%Y-%m-%d %H:%M")
+    slot = reservation[1]
+
+    if key in reservations:
+        reservations[key] = [res for res in reservations[key] if
+                             not (res['slot'] == slot and res['username'] == username)]
+        if not reservations[key]:
+            del reservations[key]
+        save_reservations(reservations)
+        print("Reservation cancelled.")
+    else:
+        print("Reservation not found.")

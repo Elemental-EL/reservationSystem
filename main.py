@@ -11,7 +11,7 @@ def main_menu(username):
     print("3. Log Out")
     choice = input("Choose an option: ")
     if choice == '1':
-        reservation.my_reservations(username)
+        reservation.view_reservations(username)
     elif choice == '2':
         reservation.available_reservations(username)
     elif choice == '3':

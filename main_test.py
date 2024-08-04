@@ -45,19 +45,19 @@ class TestMainAppFunctions(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 main()
 
-    @patch('reservation.my_reservations')
+    @patch('reservation.view_reservations')
     @patch('reservation.available_reservations')
-    def test_main_menu_my_reservations(self, mock_available_reservations, mock_my_reservations):
+    def test_main_menu_view_reservations(self, mock_available_reservations, mock_view_reservations):
         # Act
         with patch('builtins.input', side_effect=['1']):
             main_menu('test_user')
 
         # Assert
-        mock_my_reservations.assert_called_once_with('test_user')
+        mock_view_reservations.assert_called_once_with('test_user')
 
-    @patch('reservation.my_reservations')
+    @patch('reservation.view_reservations')
     @patch('reservation.available_reservations')
-    def test_main_menu_available_reservations(self, mock_available_reservations, mock_my_reservations):
+    def test_main_menu_available_reservations(self, mock_available_reservations, mock_view_reservations):
         # Act
         with patch('builtins.input', side_effect=['2']):
             main_menu('test_user')
