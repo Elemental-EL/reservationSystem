@@ -51,6 +51,14 @@ def validate_input(field_name, value):
     return True
 
 
+def validate_name(name):
+    """Validates the name to ensure it contains only alphabetic characters and spaces."""
+    if not re.match(r'^[A-Za-z\s]+$', name):
+        console.print("[red]Name can only contain letters and spaces.[/red]")
+        return False
+    return True
+
+
 def sign_up():
     """Creates a new user."""
     console.print("[bold blue]Sign Up[/bold blue]")
@@ -70,11 +78,11 @@ def sign_up():
             continue
 
         first_name = Prompt.ask("Enter first name")
-        if not validate_input("First name", first_name):
+        if not validate_input("First name", first_name) or not validate_name(first_name):
             continue
 
         last_name = Prompt.ask("Enter last name")
-        if not validate_input("Last name", last_name):
+        if not validate_input("Last name", last_name) or not validate_name(last_name):
             continue
 
         user = User(username, bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8'), first_name,
