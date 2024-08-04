@@ -1,10 +1,14 @@
 import json
 import os
 import datetime
-
+from rich.console import Console
+from rich.table import Table
+from rich.prompt import Prompt, Confirm
 import main
 
 TIME_SLOTS = ["09:00", "11:00", "13:00", "15:00", "17:00", "19:00", "21:00", "23:00"]
+
+console = Console(color_system="windows")
 
 
 def load_reservations():
@@ -40,15 +44,21 @@ def make_reservation(date, time, slot, username):
         reservations[key] = []
     reservations[key].append({'slot': slot, 'username': username})
     save_reservations(reservations)
-    print("Reservation confirmed.")
+    console.print("[bold green]Reservation confirmed.[/bold green]")
 
 
-def show_menu(options):
+def show_menu(options, title="Choose an option"):
     """Enumerates the options of each menu and returns the index of the chosen option."""
+    table = Table(title=title, show_header=True, header_style="bold magenta")
+    table.add_column("Index", justify="right", style="cyan", no_wrap=True)
+    table.add_column("Option", style="yellow")
+
     for idx, option in enumerate(options, 1):
-        print(f"{idx}. {option}")
-    choice = int(input("Choose an option: ")) - 1
-    return choice
+        table.add_row(str(idx), option)
+
+    console.print(table)
+    choice = Prompt.ask("Enter your choice", choices=[str(i) for i in range(1, len(options) + 1)], default="1")
+    return int(choice) - 1
 
 
 def time_menu(date, username):
@@ -62,11 +72,11 @@ def time_menu(date, username):
            (date != today.isoformat() or datetime.datetime.strptime(time, "%H:%M").time() > current_time)
     ]
     if not options:
-        print("No available times for this date.")
+        console.print("[bold red]No available times for this date.[/bold red]")
         return
 
     options.append("Back")
-    choice = show_menu(options)
+    choice = show_menu(options, title=f"[bold blue]Time Menu for {date}[/bold blue]")
     if choice == len(options) - 1:
         return
     selected_time = options[choice]
@@ -78,11 +88,11 @@ def slot_menu(date, time, username):
     reservations = load_reservations()
     options = [f"Slot {i}" for i in range(1, 4) if not is_slot_reserved(reservations, date, time, i)]
     if not options:
-        print("No available slots for this time.")
+        console.print("[bold red]No available slots for this time.[/bold red]")
         return
 
     options.append("Back")
-    choice = show_menu(options)
+    choice = show_menu(options, title=f"[bold blue]Slot Menu for {date} at {time}[/bold blue]")
     if choice == len(options) - 1:
         return
     selected_slot = int(options[choice].split()[1])
@@ -92,14 +102,11 @@ def slot_menu(date, time, username):
 
 def confirm_reservation(date, time, selected_slot, username):
     """Double checks for the users decision and finalizes the reservation if the input is yes."""
-    confirmation = input(f"Do you want to reserve {date} at {time}, Slot {selected_slot}? (yes/no): ")
-    if confirmation.lower() == 'yes':
+    confirmation = Confirm.ask(f"Do you want to reserve {date} at {time}, Slot {selected_slot}?")
+    if confirmation:
         make_reservation(date, time, selected_slot, username)
-    elif confirmation.lower() == 'no':
-        print("Reservation cancelled.")
     else:
-        print("Invalid input, please try again.")
-        confirm_reservation(date, time, selected_slot, username)
+        console.print("[bold yellow]Reservation cancelled.[/bold yellow]")
 
 
 def available_reservations(username):
@@ -125,7 +132,7 @@ def available_reservations(username):
             options.append("Previous week")
         options.append("Exit")
 
-        choice = show_menu(options)
+        choice = show_menu(options, title="[bold blue]Reservation Menu[/bold blue]")
         if choice == len(options) - 1:
             main.main_menu(username)
         elif choice == len(options) - 2 and start_date > today:
@@ -143,7 +150,7 @@ def view_reservations(username):
     """Lets the user choose which reservation they want to view."""
     while True:
         options = ["History of reservations", "Current reservations", "Back"]
-        choice = show_menu(options)
+        choice = show_menu(options, title="[bold blue]View Reservations[/bold blue]")
         if choice == 0:
             show_reservations(username, past=True)
         elif choice == 1:
@@ -166,19 +173,26 @@ def show_reservations(username, past):
                     user_reservations.append((reservation_time, reservation['slot']))
 
     if not user_reservations:
-        print("No reservations found.")
+        console.print("[bold red]No reservations found.[/bold red]")
         main.main_menu(username)
 
     user_reservations.sort()
+    table = Table(title="Reservations" if not past else "Past Reservations")
+    table.add_column("Index", justify="right")
+    table.add_column("Date and Time")
+    table.add_column("Slot")
+
     for idx, (res_time, slot) in enumerate(user_reservations, 1):
-        print(f"{idx}. {res_time.strftime('%Y-%m-%d %H:%M')} - Slot {slot}")
+        table.add_row(str(idx), res_time.strftime('%Y-%m-%d %H:%M'), f"Slot {slot}")
+
+    console.print(table)
 
     if past:
         input("Press Enter to go back.")
     else:
         options = [f"Cancel reservation {idx}" for idx in range(1, len(user_reservations) + 1)]
         options.append("Back")
-        choice = show_menu(options)
+        choice = show_menu(options, title="[bold blue]Active Reservations[/bold blue]")
         if choice == len(options) - 1:
             main.main_menu(username)
         confirm_cancellation(username, user_reservations[choice])
@@ -186,14 +200,11 @@ def show_reservations(username, past):
 
 def confirm_cancellation(username, reservation):
     """Double checks for the users decision and finalizes the cancellation if the input is yes."""
-    confirmation = input(f"Are you sure you want to cancel this reservation? (yes/no): ")
-    if confirmation.lower() == 'yes':
+    confirmation = Confirm.ask(f"Are you sure you want to cancel this reservation?")
+    if confirmation:
         cancel_reservation(username, reservation)
-    elif confirmation.lower() == 'no':
-        print("Cancellation aborted.")
     else:
-        print("Invalid input, please try again.")
-        confirm_cancellation(username, reservation)
+        console.print("[bold red]Cancellation aborted.[/bold red]")
 
 
 def cancel_reservation(username, reservation):
@@ -208,6 +219,6 @@ def cancel_reservation(username, reservation):
         if not reservations[key]:
             del reservations[key]
         save_reservations(reservations)
-        print("Reservation cancelled.")
+        console.print("[bold green]Reservation cancelled.[/bold green]")
     else:
-        print("Reservation not found.")
+        console.print("[bold red]Reservation not found.[/bold red]")

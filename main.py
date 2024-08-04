@@ -1,42 +1,39 @@
 import sys
-
+from rich.console import Console
+from rich.prompt import Prompt, Confirm
 import user
 import reservation
+
+console = Console(color_system="windows")
 
 
 def main_menu(username):
     """gives you the option to navigate through the app."""
-    print("1. My Reservations")
-    print("2. Available Reservations")
-    print("3. Log Out")
-    choice = input("Choose an option: ")
-    if choice == '1':
+    options = ["My reservations", "Available reservations", "Exit"]
+    choice = reservation.show_menu(options, title="[bold blue]Main Menu[/bold blue]")
+    if choice == 0:
         reservation.view_reservations(username)
-    elif choice == '2':
+    elif choice == 1:
         reservation.available_reservations(username)
-    elif choice == '3':
+    elif choice == 2:
         main()
 
 
 def main():
     while True:
-        print("1. Sign Up")
-        print("2. Log In")
-        print("3. Exit")
-        choice0 = input("Choose an option: ")
+        options = ["Sign Up", "Log In", "Exit"]
+        choice = reservation.show_menu(options, title="[bold blue]Welcome Menu[/bold blue]")
 
-        if choice0 == '1':
+        if choice == 0:
             username = user.sign_up()
             if username:
                 main_menu(username)
-        elif choice0 == '2':
+        elif choice == 1:
             username = user.log_in()
             if username:
                 main_menu(username)
-        elif choice0 == '3':
+        elif choice == 2:
             sys.exit()
-        else:
-            print("Invalid input, please try again.")
 
 
 if __name__ == "__main__":
