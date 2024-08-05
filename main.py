@@ -3,19 +3,22 @@ from rich.console import Console
 from rich.prompt import Prompt, Confirm
 import user
 import reservation
+import report
 
 console = Console(color_system="windows")
 
 
 def main_menu(username):
     """gives you the option to navigate through the app."""
-    options = ["My reservations", "Available reservations", "Exit"]
+    options = ["My reservations", "Available reservations", "Reservation reports", "Exit"]
     choice = reservation.show_menu(options, title="[bold blue]Main Menu[/bold blue]")
     if choice == 0:
         reservation.view_reservations(username)
     elif choice == 1:
         reservation.available_reservations(username)
     elif choice == 2:
+        report.report_menu(username)
+    elif choice == 3:
         main()
 
 
