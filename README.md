@@ -33,16 +33,32 @@ A Python application with a Command-Line Interface (CLI) that allows users to ma
    git clone https://github.com/Elemental-EL/reservationSystem.git
    cd reservationSystem
    
-2. **Install Dependencies**
-
-   Ensure you have Python 3.x installed. Install the required libraries using pip:
+2. **Create a Virtual Environment**
 
    ```bash
-   pip install rich bcrypt
+   python -m venv venv
    
-3. **Setup**
+3. **Activate the Virtual Environment**
+
+   - On Windows:
+     
+     ```bash
+     .\venv\Scripts\activate
+
+   - On macOS/Linux:
+     
+     ```bash
+     source venv/bin/activate
+
+4. **Install Dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+
+5. **Setup**
 
    No additional setup is required; the application uses JSON files for storage.
+   
 
 ### Executable File
 
